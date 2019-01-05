@@ -8,6 +8,7 @@ use FileHandle;
 
 ########### Get the RSS File #############
 my $tempfile = "/tmp/output.xml";
+my $nzbstore = "/root/nzb-archiv/";
 
 print "Host: $ARGV[0]\n";
 print "TempFile: $tempfile\n";
@@ -31,11 +32,11 @@ foreach my $i ( $feed->query('//item') ) {
     #print $link->text_content;
     print "\n==========Next file==========\n"; 
 	
-	if (-e "/tmp/".$title->text_content.".nzb") {
-			print "Skipping file, already Exist: /tmp/".$title->text_content.".nzb\n";
+	if (-e $nzbstore.$title->text_content.".nzb") {
+			print "Skipping file, already Exist: ".$nzbstore.$title->text_content.".nzb\n";
 		} else {
 			print "Downloading ...\n";
-			system ("torify wget --no-check-certificate \"".$link->text_content."\" -O /tmp/".$title->text_content.".nzb");
+			system ("torify wget --no-check-certificate \"".$link->text_content."\" -O ".$nzbstore.$title->text_content.".nzb");
 		}
 }
 exit (0);
