@@ -6,13 +6,28 @@ use XML::RSS::Parser;
 use FileHandle;
 
 
-########### Get the RSS File #############
-my $tempfile = "/tmp/output.xml";
-my $nzbstore = "/root/nzb-archiv/";
+########### Check the environment and parameters #############
+my $randomNum = int rand(10000);
+my $tempfile = "/tmp/output".$randomNum.".xml";
+my ($rssurl, $nzbstore) = @ARGV;
 
-print "Host: $ARGV[0]\n";
+if (not defined $rssurl) {
+	die "No RSS URL found, Syntax: $0 [RSS URL] [/path/to/nzb-store/]";	
+} 
+if (not defined $nzbstore) {
+	die "No path to NZB Download Folder found, Syntax: $0 [RSS URL] [/path/to/nzb-store/]";
+} else {
+	if (not -d $nzbstore) { # Test if it's a directory
+		die "No path to NZB Download Folder found, $nzbstore is not a directory: Syntax: $0 [RSS URL] [/path/to/nzb-store/]";
+	}
+}
+
+
+########### Get the RSS File #############
+print "RSS Url: $rssurl\n";
+print "NZB Store: $nzbstore\n";
 print "TempFile: $tempfile\n";
-system ("torify wget --no-check-certificate \"$ARGV[0]\" -O $tempfile");
+system ("wget --no-check-certificate \"$rssurl\" -O $tempfile");
 
  ########### Process RSS File #############
 my $p = XML::RSS::Parser->new;
@@ -26,17 +41,18 @@ print " ($count)\n";
 
 ########### Get the NZBs #############
 foreach my $i ( $feed->query('//item') ) { 
-    my $title = $i->query('title');
-    #print $title->text_content;
-	my $link = $i->query('link');
-    #print $link->text_content;
+     my $title = $i->query('title');
+#    print "Title: ".$title->text_content;
+     my $link = $i->query('link');
+#    print "Link:  ".$link->text_content;
     print "\n==========Next file==========\n"; 
 	
 	if (-e $nzbstore.$title->text_content.".nzb") {
 			print "Skipping file, already Exist: ".$nzbstore.$title->text_content.".nzb\n";
 		} else {
 			print "Downloading ...\n";
-			system ("torify wget --no-check-certificate \"".$link->text_content."\" -O ".$nzbstore.$title->text_content.".nzb");
+			print "\n Debug :: \"".$nzbstore.$title->text_content.".nzb\"";
+			system ("wget --no-check-certificate \"".$link->text_content."\" -O '".$nzbstore.$title->text_content.".nzb'");
 		}
 }
 exit (0);
